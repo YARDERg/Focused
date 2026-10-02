@@ -70,7 +70,29 @@ jobs:
 
       - name: Build debug APK
         working-directory: ${{ steps.locate.outputs.dir }}
-        run: gradle assembleDebug --no-daemon --stacktrace
+        shell: bash
+        run: |
+          set -o pipefail
+          gradle assembleDebug --no-daemon --stacktrace --console=plain 2>&1 | tee "$GITHUB_WORKSPACE/build.log"
+
+      - name: Show errors in summary
+        if: failure()
+        shell: bash
+        run: |
+          {
+            echo "## Build errors"
+            echo "Project dir: ${{ steps.locate.outputs.dir }}"
+            echo '```'
+            grep -E '^e: |^error:|error:|What went wrong' -A8 "$GITHUB_WORKSPACE/build.log" | head -80
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload build log
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-log
+          path: build.log
 
       - uses: actions/upload-artifact@v7
         with:
