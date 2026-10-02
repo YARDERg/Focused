@@ -52,6 +52,10 @@ jobs:
           echo "Gradle version: $GV"
           echo "gradle=$GV" >> "$GITHUB_OUTPUT"
 
+          # We build with the Gradle installed by setup-gradle, not gradlew,
+          # so drop any wrapper jar (a non-official jar fails validation).
+          find . -name 'gradle-wrapper.jar' -not -path './.git/*' -print -delete
+
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
